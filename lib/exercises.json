@@ -1,0 +1,366 @@
+[
+  {
+    "exercise_id": "Chest001",
+    "exercise_name": "Chest press (machine/smith)",
+    "primary_muscle": "chest",
+    "secondary_muscles": [
+      "front_delts",
+      "triceps"
+    ],
+    "movement_pattern": "horizontal_press",
+    "exercise_type": "compound",
+    "programming_role": "chest_press",
+    "substitution_group": "chest_press",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Chest002",
+    "exercise_name": "Chest press (barbell/dumbbell)",
+    "primary_muscle": "chest",
+    "secondary_muscles": [
+      "front_delts",
+      "triceps"
+    ],
+    "movement_pattern": "horizontal_press",
+    "exercise_type": "compound",
+    "programming_role": "chest_press",
+    "substitution_group": "chest_press",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Chest003",
+    "exercise_name": "Pec dec",
+    "primary_muscle": "chest",
+    "secondary_muscles": [],
+    "movement_pattern": "horizontal_fly",
+    "exercise_type": "isolation",
+    "programming_role": "chest_fly",
+    "substitution_group": "chest_fly",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back001",
+    "exercise_name": "Wide grip pulldown/pullup",
+    "primary_muscle": "lats",
+    "secondary_muscles": [
+      "biceps"
+    ],
+    "movement_pattern": "vertical_pull",
+    "exercise_type": "compound",
+    "programming_role": "back_lat",
+    "substitution_group": "back_lat",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back002",
+    "exercise_name": "Chest supported row (machine), elbows tucked",
+    "primary_muscle": "lats",
+    "secondary_muscles": [
+      "biceps"
+    ],
+    "movement_pattern": "horizontal_row",
+    "exercise_type": "compound",
+    "programming_role": "back_lat",
+    "substitution_group": "back_lat",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back003",
+    "exercise_name": "Chest supported row (dumbbell), elbows tucked",
+    "primary_muscle": "lats",
+    "secondary_muscles": [
+      "biceps"
+    ],
+    "movement_pattern": "horizontal_row",
+    "exercise_type": "compound",
+    "programming_role": "back_lat",
+    "substitution_group": "back_lat",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back004",
+    "exercise_name": "Chest supported row (machine), elbows flared",
+    "primary_muscle": "traps",
+    "secondary_muscles": [
+      "rear_delts"
+    ],
+    "movement_pattern": "horizontal_row",
+    "exercise_type": "compound",
+    "programming_role": "back_trap",
+    "substitution_group": "back_trap",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back005",
+    "exercise_name": "Chest supported row (dumbbell), elbows flared",
+    "primary_muscle": "traps",
+    "secondary_muscles": [
+      "rear_delts"
+    ],
+    "movement_pattern": "horizontal_row",
+    "exercise_type": "compound",
+    "programming_role": "back_trap",
+    "substitution_group": "back_trap",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Back006",
+    "exercise_name": "Chest supported shrug",
+    "primary_muscle": "traps",
+    "secondary_muscles": [],
+    "movement_pattern": "scapular_elevation",
+    "exercise_type": "isolation",
+    "programming_role": "back_trap",
+    "substitution_group": "back_trap",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Shoulder001",
+    "exercise_name": "Seated shoulder press (machine/smith)",
+    "primary_muscle": "front_delts",
+    "secondary_muscles": [
+      "triceps",
+      "side_delts"
+    ],
+    "movement_pattern": "vertical_press",
+    "exercise_type": "compound",
+    "programming_role": "shoulder_press",
+    "substitution_group": "shoulder_press",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Shoulder002",
+    "exercise_name": "Seated shoulder press (barbell/dumbbell)",
+    "primary_muscle": "front_delts",
+    "secondary_muscles": [
+      "triceps",
+      "side_delts"
+    ],
+    "movement_pattern": "vertical_press",
+    "exercise_type": "compound",
+    "programming_role": "shoulder_press",
+    "substitution_group": "shoulder_press",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Shoulder004",
+    "exercise_name": "Lateral raise (machine)",
+    "primary_muscle": "side_delts",
+    "secondary_muscles": [],
+    "movement_pattern": "lateral_raise",
+    "exercise_type": "isolation",
+    "programming_role": "shoulder_raise",
+    "substitution_group": "shoulder_raise",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Shoulder005",
+    "exercise_name": "Lateral raise (dumbbell)",
+    "primary_muscle": "side_delts",
+    "secondary_muscles": [],
+    "movement_pattern": "lateral_raise",
+    "exercise_type": "isolation",
+    "programming_role": "shoulder_raise",
+    "substitution_group": "shoulder_raise",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Shoulder006",
+    "exercise_name": "Lateral raise (cable)",
+    "primary_muscle": "side_delts",
+    "secondary_muscles": [],
+    "movement_pattern": "lateral_raise",
+    "exercise_type": "isolation",
+    "programming_role": "shoulder_raise",
+    "substitution_group": "shoulder_raise",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Bicep001",
+    "exercise_name": "Supinated curl (dumbbell/cable/preacher)",
+    "primary_muscle": "biceps",
+    "secondary_muscles": [],
+    "movement_pattern": "elbow_flexion",
+    "exercise_type": "isolation",
+    "programming_role": "biceps",
+    "substitution_group": "biceps",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Tricep001",
+    "exercise_name": "Tricep extension (cable/dumbbell/dips)",
+    "primary_muscle": "triceps",
+    "secondary_muscles": [],
+    "movement_pattern": "elbow_extension",
+    "exercise_type": "isolation",
+    "programming_role": "triceps",
+    "substitution_group": "triceps",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Leg001",
+    "exercise_name": "Leg press/squat",
+    "primary_muscle": "quads",
+    "secondary_muscles": [
+      "glutes"
+    ],
+    "movement_pattern": "squat",
+    "exercise_type": "compound",
+    "programming_role": "quad_compound",
+    "substitution_group": "quad_compound",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Leg002",
+    "exercise_name": "RDL/SLDL/45 extension",
+    "primary_muscle": "hamstrings",
+    "secondary_muscles": [
+      "glutes"
+    ],
+    "movement_pattern": "hinge",
+    "exercise_type": "compound",
+    "programming_role": "posterior_compound",
+    "substitution_group": "posterior_compound",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Quad001",
+    "exercise_name": "Leg extension",
+    "primary_muscle": "quads",
+    "secondary_muscles": [],
+    "movement_pattern": "knee_extension",
+    "exercise_type": "isolation",
+    "programming_role": "quad_isolation",
+    "substitution_group": "quad_isolation",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Ham001",
+    "exercise_name": "Leg curl",
+    "primary_muscle": "hamstrings",
+    "secondary_muscles": [],
+    "movement_pattern": "knee_flexion",
+    "exercise_type": "isolation",
+    "programming_role": "hamstring_isolation",
+    "substitution_group": "hamstring_isolation",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Glutes001",
+    "exercise_name": "Hip thrust",
+    "primary_muscle": "glutes",
+    "secondary_muscles": [
+      "hamstrings"
+    ],
+    "movement_pattern": "hip_extension",
+    "exercise_type": "compound",
+    "programming_role": "glute_priority",
+    "substitution_group": "glute_priority",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Calves001",
+    "exercise_name": "Straight-knee calf raise",
+    "primary_muscle": "calves",
+    "secondary_muscles": [],
+    "movement_pattern": "ankle_extension",
+    "exercise_type": "isolation",
+    "programming_role": "calves",
+    "substitution_group": "calves",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Adduct001",
+    "exercise_name": "Adductor machine",
+    "primary_muscle": "adductors",
+    "secondary_muscles": [],
+    "movement_pattern": "hip_adduction",
+    "exercise_type": "isolation",
+    "programming_role": "adduction",
+    "substitution_group": "adduction",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  },
+  {
+    "exercise_id": "Abduct001",
+    "exercise_name": "Abduction machine",
+    "primary_muscle": "glutes",
+    "secondary_muscles": ["abductors"],
+    "movement_pattern": "hip_abduction",
+    "exercise_type": "isolation",
+    "programming_role": "abduction",
+    "substitution_group": "abduction",
+    "default_sets": 2,
+    "rep_min": 6,
+    "rep_max": 10,
+    "active": true
+  }
+]
