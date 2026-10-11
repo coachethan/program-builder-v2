@@ -8,10 +8,16 @@ interface ReviewExportProps {
   program: Program;
   workouts: Record<string, ProgramExercise[]>;
   onBack: () => void;
+  // True when this component is being shown right after returning from the Google sign-in
+  // redirect (restored by app/build/page.tsx). Triggers the export automatically instead of
+  // making the user click a second time.
+  autoExport?: boolean;
 }
 
-// Survives the full-page redirect to Google and back (React state doesn't) - a plain flag saying
-// "the user already clicked export before signing in, so run it automatically once we're back."
+// Must match the identical constant in app/build/page.tsx - that's what reads and restores this
+// on the way back from the redirect. Saves the FULL program+workouts (not just a flag) because the
+// entire page reloads on the way back from Google, wiping all React state - this is the only
+// thing that survives, so it has to carry everything needed to resume exactly where we left off.
 const PENDING_EXPORT_KEY = "programBuilderPendingExport";
 
 function priorityLabel(priorities: string[]): string {
@@ -19,7 +25,7 @@ function priorityLabel(priorities: string[]): string {
   return priorities.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" + ");
 }
 
-export default function ReviewExport({ program, workouts, onBack }: ReviewExportProps) {
+export default function ReviewExport({ program, workouts, onBack, autoExport }: ReviewExportProps) {
   const { status } = useSession();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -45,21 +51,23 @@ export default function ReviewExport({ program, workouts, onBack }: ReviewExport
     }
   }
 
-  // Coming back from a Google sign-in redirect with a pending export flagged? Run it now,
-  // automatically - the user already clicked "export" once, they shouldn't have to click again.
+  // Coming back from the Google sign-in redirect with autoExport set (restored by the page-level
+  // component)? Finish the export automatically once the session is confirmed - the user already
+  // clicked "export" once, they shouldn't have to click again.
   useEffect(() => {
-    if (status === "authenticated" && sessionStorage.getItem(PENDING_EXPORT_KEY) === "1") {
-      sessionStorage.removeItem(PENDING_EXPORT_KEY);
+    if (status === "authenticated" && autoExport) {
       runExport();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, autoExport]);
 
   function handleExportClick() {
     if (status === "authenticated") {
       runExport();
     } else {
-      sessionStorage.setItem(PENDING_EXPORT_KEY, "1");
+      // Save everything needed to resume - a full-page redirect to Google is about to wipe all
+      // in-memory React state, including which stage of the wizard we were on.
+      sessionStorage.setItem(PENDING_EXPORT_KEY, JSON.stringify(program));
       signIn("google");
     }
   }
@@ -137,18 +145,26 @@ export default function ReviewExport({ program, workouts, onBack }: ReviewExport
           Open your spreadsheet
         </a>
       ) : (
-        <button
-          type="button"
-          onClick={handleExportClick}
-          disabled={exporting || status === "loading"}
-          className="w-full rounded-control bg-emerald-fill text-white font-semibold px-6 py-3.5 hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {exporting
-            ? "Exporting..."
-            : status === "authenticated"
-            ? "Export to Google Sheets"
-            : "Sign in with Google to export"}
-        </button>
+        <>
+          {status !== "authenticated" && (
+            <p className="text-xs text-muted mb-3">
+              First time exporting? Google will show a permission checkbox for creating the
+              spreadsheet — check it, then continue, to let the export finish.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleExportClick}
+            disabled={exporting || status === "loading"}
+            className="w-full rounded-control bg-emerald-fill text-white font-semibold px-6 py-3.5 hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {exporting
+              ? "Exporting..."
+              : status === "authenticated"
+              ? "Export to Google Sheets"
+              : "Sign in with Google to export"}
+          </button>
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   generateProgram,
@@ -36,6 +36,14 @@ const STEPS = ["Training days", "Priorities", "Your program"];
 
 type WizardStage = "days" | "priorities" | "generating" | "result";
 
+// Must match the identical constant in components/ReviewExport.tsx exactly - that's where this
+// gets written (right before the full-page redirect to Google sign-in). A full OAuth redirect
+// reloads the entire page, wiping every bit of React state (which stage we're on, the generated
+// program) - this is the only thing that survives that reload, so this page checks it on mount
+// and restores everything: which stage to show, the program, and a flag telling ReviewExport to
+// finish the export automatically instead of making the user click a second time.
+const PENDING_EXPORT_KEY = "programBuilderPendingExport";
+
 export default function BuildPage() {
   const [stage, setStage] = useState<WizardStage>("days");
   const [days, setDays] = useState<string | null>(null);
@@ -43,6 +51,28 @@ export default function BuildPage() {
   const [noneSelected, setNoneSelected] = useState(false);
   const [program, setProgram] = useState<Program | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoExport, setAutoExport] = useState(false);
+
+  // Runs once, right when this page first loads - including right after coming back from the
+  // Google sign-in redirect. If there's a saved pending export, restore the whole app straight to
+  // the result screen with that program, instead of dumping the user back at "how many days?".
+  useEffect(() => {
+    const pending = sessionStorage.getItem(PENDING_EXPORT_KEY);
+    if (!pending) return;
+    sessionStorage.removeItem(PENDING_EXPORT_KEY);
+    try {
+      const restored = JSON.parse(pending) as Program;
+      setDays(String(restored.trainingDays));
+      setPriorities(restored.priorities);
+      setNoneSelected(restored.priorities.length === 0);
+      setProgram(restored);
+      setAutoExport(true);
+      setStage("result");
+    } catch {
+      // Malformed/corrupt saved data - just fall through to the normal starting screen.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const stepIndex = stage === "days" ? 0 : stage === "priorities" ? 1 : 2;
 
@@ -86,12 +116,14 @@ export default function BuildPage() {
     setNoneSelected(false);
     setProgram(null);
     setError(null);
+    setAutoExport(false);
   }
 
   function handleBackToPriorities() {
     setStage("priorities");
     setProgram(null);
     setError(null);
+    setAutoExport(false);
     // days and the current priority selection are intentionally kept, so the user is editing
     // their existing picks rather than starting from scratch.
   }
@@ -171,6 +203,7 @@ export default function BuildPage() {
             db={exercises}
             onStartOver={handleStartOver}
             onBackToPriorities={handleBackToPriorities}
+            autoShowReview={autoExport}
           />
         )}
       </div>

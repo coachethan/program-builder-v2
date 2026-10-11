@@ -13,6 +13,9 @@ interface ProgramViewProps {
   db: Exercise[];
   onStartOver: () => void;
   onBackToPriorities: () => void;
+  // True when we've just been restored from a Google sign-in redirect with a pending export -
+  // jump straight to the review screen and let ReviewExport finish the export automatically.
+  autoShowReview?: boolean;
 }
 
 interface SwapTarget {
@@ -20,13 +23,19 @@ interface SwapTarget {
   exercise: ProgramExercise;
 }
 
-export default function ProgramView({ initialProgram, db, onStartOver, onBackToPriorities }: ProgramViewProps) {
+export default function ProgramView({
+  initialProgram,
+  db,
+  onStartOver,
+  onBackToPriorities,
+  autoShowReview
+}: ProgramViewProps) {
   const [workouts, setWorkouts] = useState(initialProgram.workouts);
   const workoutKeys = Object.keys(workouts);
   const [activeWorkout, setActiveWorkout] = useState(workoutKeys[0]);
   const [week, setWeek] = useState(1);
   const [swapTarget, setSwapTarget] = useState<SwapTarget | null>(null);
-  const [showReview, setShowReview] = useState(false);
+  const [showReview, setShowReview] = useState(autoShowReview ?? false);
 
   const rir = getRIR(week);
 
@@ -52,6 +61,7 @@ export default function ProgramView({ initialProgram, db, onStartOver, onBackToP
         program={{ ...initialProgram, workouts }}
         workouts={workouts}
         onBack={() => setShowReview(false)}
+        autoExport={autoShowReview}
       />
     );
   }
@@ -130,9 +140,7 @@ export default function ProgramView({ initialProgram, db, onStartOver, onBackToP
 
       <div className="border border-border-soft rounded-card bg-panel px-4">
         {workouts[activeWorkout].length === 0 ? (
-          <p className="text-muted text-sm py-8 text-center">
-            All exercises removed from this day.
-          </p>
+          <p className="text-muted text-sm py-8 text-center">All exercises removed from this day.</p>
         ) : (
           workouts[activeWorkout].map((ex, i) => (
             <ExerciseRow
