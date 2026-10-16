@@ -20,6 +20,31 @@ interface ReviewExportProps {
 // thing that survives, so it has to carry everything needed to resume exactly where we left off.
 const PENDING_EXPORT_KEY = "programBuilderPendingExport";
 
+// Google sign-ins hand the site a short-lived pass (about an hour). The site's own login cookie
+// lasts much longer, so someone can look signed in while the Google pass inside it is dead.
+// When that happens we send them through Google sign-in again, automatically, once. This stamp
+// (a timestamp, so an abandoned attempt goes stale) stops that from looping forever if Google
+// still rejects the new sign-in.
+const REAUTH_KEY = "programBuilderReauthTried";
+const REAUTH_WINDOW_MS = 2 * 60 * 1000;
+
+function reauthRecentlyTried(): boolean {
+  const raw = sessionStorage.getItem(REAUTH_KEY);
+  if (!raw) return false;
+  return Date.now() - Number(raw) < REAUTH_WINDOW_MS;
+}
+
+// True when the failure means "Google no longer accepts this sign-in" (expired pass, or the Drive
+// permission checkbox was not ticked). Signing in with Google again fixes both. The message
+// strings are the ones lib/googleSheetsExport.ts and the export route produce.
+function needsFreshSignIn(httpStatus: number, message: string): boolean {
+  return (
+    httpStatus === 401 ||
+    message.includes("Failed to create spreadsheet (401)") ||
+    message.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT")
+  );
+}
+
 function priorityLabel(priorities: string[]): string {
   if (priorities.length === 0) return "None";
   return priorities.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" + ");
@@ -41,7 +66,24 @@ export default function ReviewExport({ program, workouts, onBack, autoExport }: 
         body: JSON.stringify({ program, workouts })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Export failed.");
+      if (!res.ok) {
+        const message: string = data.error || "Export failed.";
+        if (needsFreshSignIn(res.status, message)) {
+          if (reauthRecentlyTried()) {
+            sessionStorage.removeItem(REAUTH_KEY);
+            throw new Error(
+              "Google did not accept the sign-in. Click the button to try again, and tick the permission checkbox if Google shows one."
+            );
+          }
+          // Save the program (the page reloads on the way to Google) and go sign in again.
+          sessionStorage.setItem(REAUTH_KEY, String(Date.now()));
+          sessionStorage.setItem(PENDING_EXPORT_KEY, JSON.stringify(program));
+          signIn("google");
+          return;
+        }
+        throw new Error(message);
+      }
+      sessionStorage.removeItem(REAUTH_KEY);
       setExportedUrl(data.spreadsheetUrl);
       window.open(data.spreadsheetUrl, "_blank");
     } catch (err) {
@@ -146,12 +188,10 @@ export default function ReviewExport({ program, workouts, onBack, autoExport }: 
         </a>
       ) : (
         <>
-          {status !== "authenticated" && (
-            <p className="text-xs text-muted mb-3">
-              First time exporting? Google will show a permission checkbox for creating the
-              spreadsheet — check it, then continue, to let the export finish.
-            </p>
-          )}
+          <p className="text-xs text-muted mb-3">
+            Google may ask you to sign in and tick a permission checkbox. Tick it, then continue,
+            so the spreadsheet can be created in your Drive.
+          </p>
           <button
             type="button"
             onClick={handleExportClick}
