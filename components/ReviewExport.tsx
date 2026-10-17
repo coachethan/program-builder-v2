@@ -189,8 +189,9 @@ export default function ReviewExport({ program, workouts, onBack, autoExport }: 
       ) : (
         <>
           <p className="text-xs text-muted mb-3">
-            Google may ask you to sign in and tick a permission checkbox. Tick it, then continue,
-            so the spreadsheet can be created in your Drive.
+            *Opens in Google Sheets
+            <br />
+            (tick box if asked)
           </p>
           <button
             type="button"
@@ -198,11 +199,7 @@ export default function ReviewExport({ program, workouts, onBack, autoExport }: 
             disabled={exporting || status === "loading"}
             className="w-full rounded-control bg-emerald-fill text-white font-semibold px-6 py-3.5 hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {exporting
-              ? "Exporting..."
-              : status === "authenticated"
-              ? "Export to Google Sheets"
-              : "Sign in with Google to export"}
+            {exporting ? "Creating your sheet..." : "Give me my program!"}
           </button>
         </>
       )}
