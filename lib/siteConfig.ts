@@ -3,4 +3,4 @@
 export const BRAND_NAME = "EgohLift";
 export const SITE_NAME = "EgohLift Program Builder";
 export const CONTACT_EMAIL = "coach.ethangyy@gmail.com";
-export const LEGAL_UPDATED = "October 17, 2026";
+export const LEGAL_UPDATED = "October 19, 2026";

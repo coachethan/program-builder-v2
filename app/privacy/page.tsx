@@ -34,8 +34,9 @@ export default function PrivacyPage() {
         <p>
           We use that permission for one thing: creating a spreadsheet that contains your program, in
           your own Google Drive. The permission only lets us see and change files that this site
-          creates. We cannot see your other files. The spreadsheet belongs to you, and you can edit
-          or delete it at any time.
+          creates. We cannot see your other files. We also use your first name from your Google
+          profile to title the spreadsheet. The spreadsheet belongs to you, and you can edit or
+          delete it at any time.
         </p>
         <p>
           Your program travels from your browser to our server for the moment it takes to create the

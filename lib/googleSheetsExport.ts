@@ -1,16 +1,24 @@
 import { Program, ProgramExercise } from "./programGenerator";
+import { buildProgramSheet, buildProgressColorRequests, GridRange } from "./sheetLayout";
 
 interface ExportResult {
   spreadsheetUrl: string;
 }
+
+export interface ExportOptions {
+  // Used for the Overview title ("Ethan's Program"). Left out, the title reads "Your Program".
+  firstName?: string | null;
+}
+
+const SHEETS_URL = "https://sheets.googleapis.com/v4/spreadsheets";
 
 function priorityLabel(priorities: string[]): string {
   if (priorities.length === 0) return "None";
   return priorities.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" + ");
 }
 
-// Builds a plain 2D grid of strings matching what ReviewExport.tsx shows on screen - summary
-// block first, then one section per workout day with a small header row and one row per exercise.
+// The plain layout: a summary block, then one small table per workout day. Only used as a safety
+// net if Google rejects the formatted sheet.
 export function buildProgramRows(program: Program, workouts: Record<string, ProgramExercise[]>): string[][] {
   const rows: string[][] = [];
 
@@ -32,26 +40,45 @@ export function buildProgramRows(program: Program, workouts: Record<string, Prog
   return rows;
 }
 
-// Two real HTTP calls to the Google Sheets REST API - no googleapis SDK, to keep the dependency
-// footprint small and the request/response shape fully visible and easy to debug.
-//
-// Scope required: https://www.googleapis.com/auth/drive.file (requested in the NextAuth Google
-// provider config) - this only grants access to files this app creates, never the user's whole
-// Drive. That's a deliberate, minimal-permission choice over the broader drive.readonly/drive
-// scopes.
-export async function exportProgramToSheets(
+// Google answers 401 when the sign-in has expired, and 403 ACCESS_TOKEN_SCOPE_INSUFFICIENT when
+// the Drive permission box was not ticked. Signing in again fixes both, so these are passed on
+// untouched (the page looks for these exact messages) instead of falling back to a plain sheet.
+function isGoogleAuthFailure(status: number, errText: string): boolean {
+  return status === 401 || errText.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT");
+}
+
+function authHeaders(accessToken: string) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json"
+  };
+}
+
+// Colors the Progressed dropdown (Yes green, No red, Maintained blue). The sheet already works
+// without this, so a failure here is logged and never stops the export.
+async function applyProgressColors(accessToken: string, spreadsheetId: string, ranges: GridRange[]) {
+  if (ranges.length === 0) return;
+  try {
+    const res = await fetch(`${SHEETS_URL}/${spreadsheetId}:batchUpdate`, {
+      method: "POST",
+      headers: authHeaders(accessToken),
+      body: JSON.stringify({ requests: buildProgressColorRequests(ranges) })
+    });
+    if (!res.ok) console.error("Could not color the Progressed dropdown:", res.status, await res.text());
+  } catch (err) {
+    console.error("Could not color the Progressed dropdown:", err);
+  }
+}
+
+async function exportPlainSheet(
   accessToken: string,
   program: Program,
-  workouts: Record<string, ProgramExercise[]>
+  workouts: Record<string, ProgramExercise[]>,
+  title: string
 ): Promise<ExportResult> {
-  const title = `Training Program - ${new Date().toLocaleDateString()}`;
-
-  const createRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
+  const createRes = await fetch(SHEETS_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-    },
+    headers: authHeaders(accessToken),
     body: JSON.stringify({ properties: { title } })
   });
 
@@ -64,13 +91,10 @@ export async function exportProgramToSheets(
   const rows = buildProgramRows(program, workouts);
 
   const updateRes = await fetch(
-    `https://sheets.googleapis.com/v4/spreadsheets/${created.spreadsheetId}/values/Sheet1!A1?valueInputOption=USER_ENTERED`,
+    `${SHEETS_URL}/${created.spreadsheetId}/values/Sheet1!A1?valueInputOption=RAW`,
     {
       method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
+      headers: authHeaders(accessToken),
       body: JSON.stringify({ values: rows })
     }
   );
@@ -81,4 +105,36 @@ export async function exportProgramToSheets(
   }
 
   return { spreadsheetUrl: created.spreadsheetUrl };
+}
+
+// Scope required: https://www.googleapis.com/auth/drive.file (requested in lib/authOptions.ts).
+// It only covers files this app creates, never the rest of the person's Drive.
+export async function exportProgramToSheets(
+  accessToken: string,
+  program: Program,
+  workouts: Record<string, ProgramExercise[]>,
+  options: ExportOptions = {}
+): Promise<ExportResult> {
+  const title = `Training Program - ${new Date().toLocaleDateString()}`;
+  const layout = buildProgramSheet(program, workouts, { title, firstName: options.firstName });
+
+  const res = await fetch(SHEETS_URL, {
+    method: "POST",
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(layout.spreadsheet)
+  });
+
+  if (res.ok) {
+    const created = (await res.json()) as { spreadsheetId: string; spreadsheetUrl: string };
+    await applyProgressColors(accessToken, created.spreadsheetId, layout.progressRanges);
+    return { spreadsheetUrl: created.spreadsheetUrl };
+  }
+
+  const errText = await res.text();
+  if (isGoogleAuthFailure(res.status, errText)) {
+    throw new Error(`Failed to create spreadsheet (${res.status}): ${errText}`);
+  }
+
+  console.error("Google rejected the formatted sheet, using the plain layout:", res.status, errText);
+  return exportPlainSheet(accessToken, program, workouts, title);
 }

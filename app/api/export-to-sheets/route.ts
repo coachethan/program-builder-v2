@@ -3,9 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/authOptions";
 import { exportProgramToSheets } from "@/lib/googleSheetsExport";
 
-// The client never gets to claim "I'm signed in" - this route re-checks the session server-side
-// via getServerSession on every call, so a request without a valid Google session is rejected
-// regardless of what the client sends.
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -26,7 +23,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await exportProgramToSheets(session.accessToken, program as any, workouts as any);
+    // First name from the Google sign-in, used to title the sheet ("Ethan's Program").
+    const fullName = session.user?.name ?? "";
+    const firstName = fullName.trim().split(/\s+/)[0] || null;
+    const result = await exportProgramToSheets(session.accessToken, program as any, workouts as any, {
+      firstName
+    });
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error exporting to Sheets.";
