@@ -2,7 +2,7 @@ import { Program, ProgramExercise, getRIR } from "./programGenerator";
 
 // Describes the whole exported sheet as a Google Sheets "create" request. Nothing here talks to
 // Google, so it can be tested offline. One tab ("Program"): the Overview sits at the left and the
-// 8 weeks run side by side to its right. Nothing is frozen, so on a phone everything scrolls.
+// 8 weeks run side by side to its right; inside each week the training days stack top to bottom. Nothing is frozen, so on a phone everything scrolls.
 
 export interface GridRange {
   sheetId: number;
@@ -191,6 +191,39 @@ function toCellData(spec: CellSpec | undefined): CellData {
   return cell;
 }
 
+interface Session {
+  name: string;
+  exercises: ProgramExercise[];
+}
+
+// One table per training day, stacked top to bottom inside each week. The rules build a single
+// full-body session (and a single upper and lower session), so the extra days repeat the same
+// exercises, each with its own table to log in. Edits made on the site (swaps, removals) carry
+// into every copy.
+//   3 days: Full Body A, B, C      2 days: Full Body A, B
+//   4 days: Upper A, Lower A, Upper B, Lower B
+export function sessionsFor(program: Program, workouts: Record<string, ProgramExercise[]>): Session[] {
+  if (program.split === "upper_lower_4") {
+    const upper = workouts["Upper A"];
+    const lower = workouts["Lower A"];
+    if (upper && lower) {
+      return [
+        { name: "Upper A", exercises: upper },
+        { name: "Lower A", exercises: lower },
+        { name: "Upper B", exercises: upper },
+        { name: "Lower B", exercises: lower }
+      ];
+    }
+  } else {
+    const base = workouts["Full Body A"];
+    if (base) {
+      const letters = program.split === "full_body_3" ? ["A", "B", "C"] : ["A", "B"];
+      return letters.map((letter) => ({ name: `Full Body ${letter}`, exercises: base }));
+    }
+  }
+  return Object.entries(workouts).map(([name, exercises]) => ({ name, exercises }));
+}
+
 function priorityLabel(priorities: string[]): string {
   if (priorities.length === 0) return "None";
   return priorities.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" + ");
@@ -210,10 +243,10 @@ export function buildProgramSheet(
 
   // How many rows one week needs: a banner, then for every workout day a day bar, a header row and
   // one row per exercise. Every week has the same shape, so they line up across the sheet.
-  const dayEntries = Object.entries(workouts);
+  const sessions = sessionsFor(program, workouts);
   let weekRows = 1;
-  dayEntries.forEach(([, exercises]) => {
-    weekRows += 2 + exercises.length;
+  sessions.forEach((session) => {
+    weekRows += 2 + session.exercises.length;
   });
   const rowCount = Math.max(OVERVIEW_ROWS, weekRows);
 
@@ -302,12 +335,12 @@ export function buildProgramSheet(
       color: COLORS.white,
       bold: true,
       size: BANNER_SIZE,
-      align: "LEFT"
+      align: "CENTER"
     });
 
     let r = 1;
     const rir = getRIR(week);
-    dayEntries.forEach(([dayName, exercises]) => {
+    sessions.forEach(({ name: dayName, exercises }) => {
       putMerged(r, r + 1, c0, c0 + BLOCK_COLS, {
         text: dayName,
         bg: COLORS.day,

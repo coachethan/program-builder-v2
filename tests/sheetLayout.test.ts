@@ -157,20 +157,20 @@ test("the Progressed dropdown offers Yes, No and Maintained, and only that colum
     })
   );
   expect(PROGRESS_OPTIONS).toEqual(["Yes", "No", "Maintained"]);
-  expect(dropdowns).toBe(WEEKS * 8);
+  expect(dropdowns).toBe(WEEKS * 3 * 8);
   expect(g[3][weekStartCol(1) + 6].dataValidation).toBeDefined();
   expect(g[3][weekStartCol(1) + 7].dataValidation).toBeUndefined();
 });
 
 test("color rules: Yes green, No red, Maintained blue, on every Progressed cell", () => {
   const layout = build(fullBody());
-  expect(layout.progressRanges).toHaveLength(WEEKS);
+  expect(layout.progressRanges).toHaveLength(WEEKS * 3);
   const requests = buildProgressColorRequests(layout.progressRanges);
   expect(requests).toHaveLength(3);
   const byOption: Record<string, { red: number; green: number; blue: number }> = {};
   requests.forEach((req) => {
     const rule = req.addConditionalFormatRule.rule;
-    expect(rule.ranges).toHaveLength(WEEKS);
+    expect(rule.ranges).toHaveLength(WEEKS * 3);
     byOption[rule.booleanRule.condition.values[0].userEnteredValue] = rule.booleanRule.format.backgroundColor;
   });
   expect(byOption.Yes.green).toBeGreaterThan(byOption.Yes.red);
@@ -207,19 +207,70 @@ test("merged areas stay inside the sheet and never overlap", () => {
   });
 });
 
-test("4-day split: Upper A and Lower A stack inside every week, in 16 rows", () => {
+test("week headers are centered", () => {
+  const g = cells(build(fullBody()));
+  for (let week = 1; week <= WEEKS; week++) {
+    expect(g[0][weekStartCol(week)].userEnteredFormat?.horizontalAlignment).toBe("CENTER");
+  }
+});
+
+test("3 days a week: Full Body A, B and C stack vertically in every week", () => {
+  const layout = build(fullBody());
+  const g = cells(layout);
+  expect(layout.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(31);
+  for (let week = 1; week <= WEEKS; week++) {
+    const c0 = weekStartCol(week);
+    expect(textOf(g[1][c0])).toBe("Full Body A");
+    expect(textOf(g[11][c0])).toBe("Full Body B");
+    expect(textOf(g[21][c0])).toBe("Full Body C");
+    [2, 12, 22].forEach((headerRow) => expect(textOf(g[headerRow][c0])).toBe("Exercise"));
+    [3, 13, 23].forEach((firstRow) => expect(textOf(g[firstRow][c0])).toBe(textOf(g[3][weekStartCol(1)])));
+  }
+  expect(layout.progressRanges).toHaveLength(WEEKS * 3);
+});
+
+test("2 days a week: Full Body A and B", () => {
+  const layout = build(generateProgram(2, ["chest"], exercises));
+  const g = cells(layout);
+  expect(layout.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(21);
+  for (let week = 1; week <= WEEKS; week++) {
+    const c0 = weekStartCol(week);
+    expect(textOf(g[1][c0])).toBe("Full Body A");
+    expect(textOf(g[11][c0])).toBe("Full Body B");
+  }
+  expect(layout.progressRanges).toHaveLength(WEEKS * 2);
+  expect(textOf(g[1][2])).toBe("Full Body");
+  expect(textOf(g[2][2])).toBe("2 / week");
+});
+
+test("4 days a week: Upper A, Lower A, Upper B, Lower B stack vertically in every week", () => {
   const layout = build(upperLower());
   const g = cells(layout);
-  expect(layout.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(16);
-  expect(layout.progressRanges).toHaveLength(WEEKS * 2);
+  expect(layout.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(31);
+  expect(layout.progressRanges).toHaveLength(WEEKS * 4);
   for (let week = 1; week <= WEEKS; week++) {
     const c0 = weekStartCol(week);
     expect(textOf(g[1][c0])).toBe("Upper A");
-    expect(textOf(g[2][c0])).toBe("Exercise");
     expect(textOf(g[9][c0])).toBe("Lower A");
-    expect(textOf(g[10][c0])).toBe("Exercise");
+    expect(textOf(g[16][c0])).toBe("Upper B");
+    expect(textOf(g[24][c0])).toBe("Lower B");
+    [2, 10, 17, 25].forEach((headerRow) => expect(textOf(g[headerRow][c0])).toBe("Exercise"));
+    expect(textOf(g[18][c0])).toBe(textOf(g[3][c0]));
+    expect(textOf(g[26][c0])).toBe(textOf(g[11][c0]));
   }
   expect(textOf(g[1][2])).toBe("Upper / Lower");
+});
+
+test("edits made on the site carry into every copy of the table", () => {
+  const program = fullBody();
+  const trimmed = { "Full Body A": program.workouts["Full Body A"].slice(0, 5) };
+  const layout = build(program, "Ethan", trimmed);
+  const g = cells(layout);
+  const c0 = weekStartCol(1);
+  expect(textOf(g[1][c0])).toBe("Full Body A");
+  expect(textOf(g[8][c0])).toBe("Full Body B");
+  expect(textOf(g[15][c0])).toBe("Full Body C");
+  expect(layout.progressRanges[0].endRowIndex - layout.progressRanges[0].startRowIndex).toBe(5);
 });
 
 test("removing exercises or whole days does not break the layout", () => {
@@ -227,7 +278,7 @@ test("removing exercises or whole days does not break the layout", () => {
   const fewer = { "Full Body A": program.workouts["Full Body A"].slice(0, 2) };
   const small = build(program, "Ethan", fewer);
   expect(small.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(16);
-  expect(small.progressRanges).toHaveLength(WEEKS);
+  expect(small.progressRanges).toHaveLength(WEEKS * 3);
   const empty = build(program, "Ethan", { "Full Body A": [] });
   expect(empty.progressRanges).toHaveLength(0);
   expect(empty.spreadsheet.sheets[0].properties.gridProperties.rowCount).toBe(16);
